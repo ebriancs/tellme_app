@@ -26,12 +26,11 @@ class CaptureLocationView(View):
             ip_address = request.META.get('REMOTE_ADDR')
             device_info = data.get('deviceInfo')
 
-            # Save data to the database
             UserDetail.objects.create(
                 ip_address=ip_address,
                 latitude=latitude,
                 longitude=longitude,
-                device_info=device_info  # Save device information
+                device_info=device_info
             )
 
             logger.debug(f"\nIP ADDRESS: {ip_address}\nLATITUDE: {latitude}\nLONGITUDE: {longitude}\nDEVICE INFO: {device_info}\n")

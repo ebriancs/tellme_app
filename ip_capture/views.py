@@ -1,6 +1,6 @@
 from django.views.generic import TemplateView
 from django.views import View
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse
 import json
 import logging
 
